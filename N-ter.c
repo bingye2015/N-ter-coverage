@@ -1,4 +1,4 @@
-/* N-terminal coverage */
+/* Coverage of the N-terminal peptides*/
 
 /*	第一部分：提取数据
 	把peptide sequence和protein ID从fasta文件提取出来，存放到structure中。
@@ -21,17 +21,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/*#define BASE 20371
-#define LONG 30
+#define BASE 20371
+/*#define LONG 30
 #define COUNT 5
-#define RESULT_PATH E:\ 
-#define FASTA_PATH /home/mb/文档/MCF7.fasta */
+#define RESULT_PATH E:
+#define FASTA_PATH E:\MCF7.fasta*/
 
 #define ERROR -1
-char *get_proteinid(char *p, int n);
-char *get_peptideseq(char *p, int n);
-char * buff;							//缓冲区指针
+
+char * get_proteinid(char *p, int n);
+char * get_peptideseq(char *p, int n);
+char * buff;						//缓冲区指针
 char * start_point;
+char * peptideseq;
 int size;
 
 /* struct peptide {
@@ -48,13 +50,13 @@ struct fasta {
 int main(void)
 {
 	//FILE * file_target;
-	FILE * file_fasta;
-	size = 0;
-	static int i;
-	static int pos;
-	static int seq_pos;
+	FILE * file_fasta;			//声明fasta文件指针
+	size = 0;					//用于计算文件大小，分配动态内存
+	static int i;				//counter
+	static int pos;				//指认蛋白ID位置
+	static int seq_pos;			//指认蛋白AA序列位置
 	
-	file_fasta = fopen ("MCF7.fasta","rt");
+	file_fasta = fopen ("MCF7.fasta","rt");	//打开fasta文件
 	if (file_fasta == NULL) {
 		printf("ERROR:cannot retrieve this file.\n");
 	return ERROR;}
@@ -63,38 +65,51 @@ int main(void)
 	size = ftell(file_fasta);
 	/* 读出文件大小，并存入size中 */
 	
-	rewind(file_fasta);									//将*file_fasta指针重新指向文件开头
+	rewind(file_fasta);										//将*file_fasta指针重新指向文件开头
 	printf("The size of file_fasta is %d.\n", size);
-	buff = (char *)malloc(size-1);						//分配内存
+	buff = (char *)malloc(size-1);									//给fasta文件分配内存
 	start_point = (char *)malloc(size-1);
+	peptideseq = (char *)malloc(size-1);
 	if (buff == NULL || start_point == NULL) return ERROR;
-	fread (buff, size-1, 1, file_fasta);					//将*file_fasta指向的内容读入buff缓冲区
-	start_point = buff;									//将*start_point指向buff首地址，用于free内存
-	printf("%s\n", buff);
+	fread (buff, size-1, 1, file_fasta);								//将*file_fasta指向的内容读入buff缓冲区
+	start_point = buff;										//将*start_point指向buff首地址，用于free内存
+	peptideseq = buff;
+	//printf("%s\n", buff);										//打印fasta文件，用于调试
 	
-	for (; *buff;buff++) {
-		printf("%p\n",buff);
+	for (int y = 0; y < 4; y++) {
+		for (; *buff;buff++) {										//循环一直进行，直到break
+		//printf("%p\n",buff);
 		i++;
-		if ((*buff == '|') && (*(buff + 1) == ' ')) {
-			pos = i; 									//i没有初始化？
+		if ((*buff == '|') && (*(buff + 7) == '|')) {
+			pos = i + 7; 									//static类型变量i自动初始化
 			printf("The value of pos is %d\n", pos);
 		}
-		if (*buff == 'M') {
+
+		if ((*buff == 'M') && (*(buff - 1) == '\n')) {						//设置跳出循环条件
+			seq_pos = i - 1;
 			printf("The value of seq_pos is %d\n", seq_pos);
 			break;
 		}
 	}
 	
-	char * mm = get_proteinid(start_point, pos);
-	char * seq = get_peptideseq(start_point, seq_pos);
+	char * mm = get_proteinid(peptideseq, pos);
+	char * seq = get_peptideseq(peptideseq, seq_pos);
 	
-	printf("descriptor=\n%s\n", mm);
+	printf("proteinID=\n%s\n", mm);
 	printf("SEQ=\n%s\n",seq);
+
+	free(mm);
+	free(seq);
+
+	}
+
+	
+
 	buff = start_point;
 	
 	free(buff);
-	free(mm);
-	free(seq);
+
+
 	
 	fclose(file_fasta);
 	
@@ -106,8 +121,8 @@ int main(void)
 	file_target = fopen ("PATH","rt");
 	char peptide[COUNT][LONG];
 	char database[][];	
-	for (int x = 0; x < LONG; i++) {					//外层循环是peptide
-		for (int y = 0; y < BASE;j++) {					//内层循环是比对database
+	for (int x = 0; x < LONG; i++) {								//外层循环是peptide
+		for (int y = 0; y < BASE;j++) {								//内层循环是比对database
 			f 
 	
 		}
@@ -132,16 +147,25 @@ char *get_proteinid(char *p, int n) {
 /* 从FASTA文件读取蛋白序列 */
 char *get_peptideseq(char *p, int n) {
 	static char * m, * t;
-	m = (char *)malloc(n-1);
-	t = (char *)malloc(n-1);
+	m = (char *)malloc(30);
+	t = (char *)malloc(30);
 	if (m == NULL || n == NULL) 
 		return NULL;
 	t = m;
 	p = p + n;
-	while ((n < size) && (*p)) {
+
+	for (int x = 0;x < 25; x++) {
 		*m++ = *p++;
-		n++;
 	}
-	*(m-1) = '\0';
+	*(m) = '\0';
 	return t;
-	}
+}
+
+
+
+
+
+
+
+
+
